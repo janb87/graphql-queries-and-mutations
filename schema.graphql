@@ -95,13 +95,12 @@ input ProfileCreateWithoutUserInput {
 }
 
 input ProfileWhereUniqueInput {
-  bio: String
   id: Int
 }
 
 type Query {
   feed: [Post!]!
-  filterPosts(searchString: String): [Post!]!
+  filterPosts(published: Boolean, searchString: String): [Post!]!
   post(where: PostWhereUniqueInput!): Post
 }
 

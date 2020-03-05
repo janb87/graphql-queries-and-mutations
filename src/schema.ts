@@ -1,5 +1,12 @@
 import { nexusPrismaPlugin } from 'nexus-prisma'
-import { idArg, makeSchema, objectType, stringArg, intArg } from 'nexus'
+import {
+  idArg,
+  makeSchema,
+  objectType,
+  stringArg,
+  intArg,
+  booleanArg,
+} from 'nexus'
 
 const User = objectType({
   name: 'User',
@@ -60,13 +67,19 @@ const Query = objectType({
       type: 'Post',
       args: {
         searchString: stringArg({ nullable: true }),
+        published: booleanArg({ nullable: true }),
       },
-      resolve: (_, { searchString }, ctx) => {
+      resolve: (_, { searchString, published }, ctx) => {
         return ctx.prisma.post.findMany({
           where: {
             OR: [
               { title: { contains: searchString } },
               { content: { contains: searchString } },
+            ],
+            AND: [
+              typeof published === 'boolean'
+                ? { published: { equals: published } }
+                : {},
             ],
           },
         })
@@ -117,12 +130,12 @@ const Mutation = objectType({
     })
 
     t.crud.createOneProfile({ alias: 'createUserProfile' })
-    t.crud.createOneCategory({ alias: 'createCategory'})
+    t.crud.createOneCategory({ alias: 'createCategory' })
     t.field('addPostToCategory', {
       type: 'Category',
       args: {
         postId: intArg(),
-        cagetoryId: intArg()
+        cagetoryId: intArg(),
       },
       resolve: (_, args, ctx) => {
         return ctx.prisma.category.update({
@@ -130,14 +143,13 @@ const Mutation = objectType({
           data: {
             posts: {
               connect: {
-                id: args.postId
-              }
-            }
-          }
+                id: args.postId,
+              },
+            },
+          },
         })
-      }
+      },
     })
-
   },
 })
 
